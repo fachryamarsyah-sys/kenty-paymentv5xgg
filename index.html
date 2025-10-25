@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - KentyStoore</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Variabel warna */
+        :root {
+            --primary-blue: #1a237e;
+            --dark-blue: #0d1440;
+            --light-blue: #2196f3;
+            --black: #121212;
+            --yellow: #ffeb3b;
+            --white: #ffffff;
+        }
+
+        /* Reset dan gaya dasar */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-blue), var(--black));
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--dark-blue), var(--black));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        .heart-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 30px;
+        }
+
+        .heart {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--yellow);
+            transform: rotate(45deg);
+            animation: heartbeat 1.2s infinite;
+            box-shadow: 0 0 20px var(--yellow);
+        }
+
+        .heart:before,
+        .heart:after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--yellow);
+            border-radius: 50%;
+        }
+
+        .heart:before {
+            top: -50px;
+            left: 0;
+        }
+
+        .heart:after {
+            top: 0;
+            left: -50px;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: rotate(45deg) scale(1); }
+            25% { transform: rotate(45deg) scale(1.1); }
+            50% { transform: rotate(45deg) scale(1.2); }
+            75% { transform: rotate(45deg) scale(1.1); }
+            100% { transform: rotate(45deg) scale(1); }
+        }
+
+        .loading-text {
+            font-size: 24px;
+            color: var(--white);
+            text-align: center;
+            margin-top: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Konten utama */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s forwards 1s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(26, 35, 126, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--yellow);
+            text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--white);
+            opacity: 0.8;
+        }
+
+        /* Menu navigasi */
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            background: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn:hover {
+            background: var(--light-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .nav-btn.active {
+            background: var(--yellow);
+            color: var(--black);
+        }
+
+        /* Section konten */
+        .content-section {
+            display: none;
+            background: rgba(18, 18, 18, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--yellow);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-blue);
+            font-size: 1.8rem;
+        }
+
+        /* Kartu payment */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .payment-card {
+            background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue));
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 235, 59, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(33, 150, 243, 0.3);
+        }
+
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--yellow);
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            color: var(--yellow);
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .payment-number {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .payment-owner {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .copy-btn {
+            background: var(--yellow);
+            color: var(--black);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: var(--white);
+            transform: scale(1.05);
+        }
+
+        .unavailable {
+            color: #ff5252;
+            font-weight: 600;
+        }
+
+        /* QRIS */
+        .qris-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .qris-image {
+            max-width: 250px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--yellow);
+        }
+
+        /* Grup dan saluran */
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue));
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 235, 59, 0.2);
+        }
+
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(33, 150, 243, 0.3);
+        }
+
+        .group-icon {
+            font-size: 2.5rem;
+            color: var(--yellow);
+            margin-bottom: 15px;
+        }
+
+        .group-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .group-link {
+            display: inline-block;
+            background: var(--yellow);
+            color: var(--black);
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .group-link:hover {
+            background: var(--white);
+            transform: scale(1.05);
+        }
+
+        /* Kontrol musik */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-blue);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .music-control:hover {
+            background: var(--light-blue);
+            transform: scale(1.1);
+        }
+
+        .music-control i {
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: var(--white);
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        /* Responsif */
+        @media (max-width: 768px) {
+            .payment-grid, .group-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-container {
+                flex-wrap: wrap;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="heart-container">
+            <div class="heart"></div>
+        </div>
+        <div class="loading-text">Mempersiapkan Pembayaran...</div>
+    </div>
+
+    <!-- Kontrol Musik -->
+    <div class="music-control" id="music-control">
+        <i class="fas fa-volume-up"></i>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="bg-music" loop>
+        <source src="https://fascinating-beige-4wkkul0hrd.edgeone.app/Rosa%20Linn%20-%20Snap%20(Speed%20Up)%20snapping%20one,%20two,%20where%20are%20you%20(Lyrics%20Terjemahan)_%20Tiktok%20Version.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung elemen audio.
+    </audio>
+
+    <!-- Konten Utama -->
+    <div class="container">
+        <header>
+            <h1>Payment Suryanita</h1>
+            <p class="subtitle">Lakukan pembayaran dengan mudah dan cepat</p>
+        </header>
+
+        <!-- Menu Navigasi -->
+        <div class="nav-container">
+            <button class="nav-btn active" data-target="payment">Pembayaran</button>
+            <button class="nav-btn" data-target="groups">Grup</button>
+            <button class="nav-btn" data-target="channels">Saluran</button>
+        </div>
+
+        <!-- Section Pembayaran -->
+        <section id="payment" class="content-section active">
+            <h2>Metode Pembayaran</h2>
+            <div class="payment-grid">
+                <!-- DANA -->
+                <div class="payment-card">
+                    <div class="payment-method">
+                        <i class="fas fa-wallet payment-icon"></i>
+                        <div class="payment-details">
+                            <div class="payment-name">DANA</div>
+                            <div class="payment-number">083182576621</div>
+                            <div class="payment-owner">A/N: SURYANITA</div>
+                        </div>
+                    </div>
+                    <button class="copy-btn" data-text="083182576621">Salin Nomor</button>
+                </div>
+
+                <!-- GOPAY -->
+                <div class="payment-card">
+                    <div class="payment-method">
+                        <i class="fas fa-mobile-alt payment-icon"></i>
+                        <div class="payment-details">
+                            <div class="payment-name">GOPAY</div>
+                            <div class="payment-number">083182576621</div>
+                            <div class="payment-owner">A/N: SURYANITA</div>
+                        </div>
+                    </div>
+                    <button class="copy-btn" data-text="083182576621">Salin Nomor</button>
+                </div>
+
+                <!-- OVO -->
+                <div class="payment-card">
+                    <div class="payment-method">
+                        <i class="fas fa-credit-card payment-icon"></i>
+                        <div class="payment-details">
+                            <div class="payment-name">OVO</div>
+                            <div class="payment-number unavailable">Tidak Tersedia</div>
+                            <div class="payment-owner">-</div>
+                        </div>
+                    </div>
+                    <button class="copy-btn" disabled>Salin Nomor</button>
+                </div>
+
+                <!-- QRIS -->
+                <div class="payment-card">
+                    <div class="payment-method">
+                        <i class="fas fa-qrcode payment-icon"></i>
+                        <div class="payment-details">
+                            <div class="payment-name">QRIS</div>
+                            <div class="payment-number">Scan Kode QR</div>
+                            <div class="payment-owner">Semua Bank & E-Wallet</div>
+                        </div>
+                    </div>
+                    <div class="qris-container">
+                        <img src="https://kentaosj.edgeone.app/20250724_194521.jpg" alt="QRIS" class="qris-image">
+                    </div>
+                    <button class="copy-btn" data-text="https://kentaosj.edgeone.app/20250724_194521.jpg" style="margin-top: 15px;">Salin Link QR</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Grup -->
+        <section id="groups" class="content-section">
+            <h2>Grup WhatsApp</h2>
+            <div class="group-grid">
+                <div class="group-card">
+                    <i class="fab fa-whatsapp group-icon"></i>
+                    <div class="group-name">GRUB BLOXFRUITS</div>
+                    <a href="https://chat.whatsapp.com/ErQLC4dIQtA4jUKbwaIDLg?mode=ems_copy_t" class="group-link" target="_blank">Bergabung</a>
+                </div>
+                
+                <div class="group-card">
+                    <i class="fab fa-whatsapp group-icon"></i>
+                    <div class="group-name">GRUB FISCHT IT</div>
+                    <a href="https://chat.whatsapp.com/DwtRdIYUk3GACKBImKBqW5?mode=wwt" class="group-link" target="_blank">Bergabung</a>
+                </div>
+                
+                <div class="group-card">
+                    <i class="fab fa-whatsapp group-icon"></i>
+                    <div class="group-name">GRUB PLANT VS BRAINROT</div>
+                    <a href="https://chat.whatsapp.com/HTnqbj0q1nJBQmIugUUttC?mode=wwt" class="group-link" target="_blank">Bergabung</a>
+                </div>
+                
+                <div class="group-card">
+                    <i class="fab fa-whatsapp group-icon"></i>
+                    <div class="group-name">GRUB ALL MAP ROBLOX</div>
+                    <a href="https://chat.whatsapp.com/KRqvWlwISA0EhCG2vjfs69?mode=ems_copy_t" class="group-link" target="_blank">Bergabung</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Saluran -->
+        <section id="channels" class="content-section">
+            <h2>Saluran WhatsApp</h2>
+            <div class="group-grid">
+                <div class="group-card">
+                    <i class="fab fa-whatsapp group-icon"></i>
+                    <div class="group-name">Saluran WhatsApp</div>
+                    <a href="https://whatsapp.com/channel/0029VbArPLQ0QeahxgB2if33" class="group-link" target="_blank">Bergabung</a>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Payment KentyStoore. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Fungsi untuk loading screen
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.visibility = 'hidden';
+                
+                // Mulai memutar musik setelah loading selesai
+                const bgMusic = document.getElementById('bg-music');
+                bgMusic.volume = 0.5;
+                bgMusic.play().catch(error => {
+                    console.log('Autoplay diblokir, menunggu interaksi pengguna');
+                });
+            }, 3000); // Loading selama 3 detik
+        });
+
+        // Kontrol musik
+        const musicControl = document.getElementById('music-control');
+        const bgMusic = document.getElementById('bg-music');
+        let isPlaying = false;
+
+        musicControl.addEventListener('click', function() {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicControl.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else {
+                bgMusic.play();
+                musicControl.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Navigasi menu
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                
+                // Hapus kelas active dari semua tombol dan section
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                contentSections.forEach(section => section.classList.remove('active'));
+                
+                // Tambahkan kelas active ke tombol yang diklik dan section target
+                this.classList.add('active');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // Fungsi salin teks
+        const copyButtons = document.querySelectorAll('.copy-btn:not([disabled])');
+        
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const textToCopy = this.getAttribute('data-text');
+                
+                // Buat elemen textarea sementara
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = textToCopy;
+                document.body.appendChild(tempTextArea);
+                
+                // Pilih dan salin teks
+                tempTextArea.select();
+                document.execCommand('copy');
+                
+                     // Hapus elemen sementara
+                document.body.removeChild(tempTextArea);
+                
+                // Ubah teks tombol sementara
+                const originalText = this.textContent;
+                this.textContent = 'Tersalin!';
+                
+                setTimeout(() => {
+                    this.textContent = originalText;
+                }, 2000);
+            });
+        });
+
+        // Efek animasi tambahan untuk elemen saat scroll
+        window.addEventListener('scroll', function() {
+            const cards = document.querySelectorAll('.payment-card, .group-card');
+            const windowHeight = window.innerHeight;
+            
+            cards.forEach(card => {
+                const cardPosition = card.getBoundingClientRect().top;
+                
+                if (cardPosition < windowHeight - 100) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        // Inisialisasi animasi kartu saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.payment-card, .group-card');
+            
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            });
+            
+            // Trigger scroll event untuk memulai animasi
+            window.dispatchEvent(new Event('scroll'));
+        });
+    </script>
+</body>
+</html>
